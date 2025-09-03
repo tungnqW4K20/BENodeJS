@@ -1,0 +1,24 @@
+{
+    "development": {
+      "username": "root",
+      "password": "123456",
+      "database": "shopyody_new",
+      "host": "localhost",
+      "dialect": "mysql"
+    },
+    "test": {
+      "username": "root",
+      "password": "123456",
+      "database": "cloth_test",
+      "host": "localhost",
+      "dialect": "mysql"
+    },
+    "production": {
+      "username": "prod_user",
+      "password": "prod_password",
+      "database": "cloth_prod",
+      "host": "prod_db_host",
+      "dialect": "mysql",
+      "logging": false
+    }
+  }
