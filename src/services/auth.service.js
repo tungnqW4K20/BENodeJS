@@ -92,13 +92,15 @@ const loginAdmin = async (loginData) => {
     if (!username || !password) {
         throw new Error('Vui lòng nhập email/username và mật khẩu.');
     }
+    console.log("username", username)
+    console.log("password", password)
 
     const admin = await Admin.findOne({
         where: {
             [db.Sequelize.Op.or]: [ { username: username }]
         }
     });
-
+    console.log("admin", admin)
     if (!admin) {
         throw new Error('Không tìm thấy admin');
     }
