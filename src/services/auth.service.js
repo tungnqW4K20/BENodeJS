@@ -100,7 +100,7 @@ const loginAdmin = async (loginData) => {
     });
 
     if (!admin) {
-        throw new Error('Email/username hoặc mật khẩu không chính xác.');
+        throw new Error('Không tìm thấy admin');
     }
 
     const isPasswordMatch = password === admin.password;

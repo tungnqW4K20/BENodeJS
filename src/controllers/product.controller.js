@@ -221,7 +221,6 @@ const getDetailsById = async (req, res, next) => {
 
 const getByCategory = async (req, res, next) => {
     try {
-        // Lấy categoryId từ path parameters
         const { categoryId } = req.params;
         // Lấy tham số phân trang từ query string
         const { limit = 10, page = 1 } = req.query;
