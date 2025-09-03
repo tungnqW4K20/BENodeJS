@@ -36,8 +36,8 @@ db.sequelize.authenticate()
   .then(() => {
     console.log('Kết nối MySQL thành công!');
     //return db.sequelize.sync({ alter: true }); // Dùng alter hoặc không sync ở đây nếu dùng migrations
-    //return db.sequelize.sync(); // Đồng bộ để tạo bảng nếu chưa có
-    return db.sequelize.sync({ alter: true }); // thay đổi cấu trúc bảng
+    return db.sequelize.sync(); // Đồng bộ để tạo bảng nếu chưa có
+    // return db.sequelize.sync({ alter: true }); // thay đổi cấu trúc bảng
   })
   .then(() => {
     console.log('Đồng bộ bảng thành công!');

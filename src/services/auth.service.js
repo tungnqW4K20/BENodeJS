@@ -94,6 +94,8 @@ const loginAdmin = async (loginData) => {
     }
     console.log("username", username)
     console.log("password", password)
+    console.log("db", db)
+    console.log("Admin", Admin)
 
     const admin = await Admin.findOne({
         where: {
