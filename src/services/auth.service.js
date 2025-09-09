@@ -58,7 +58,10 @@ const loginCustomer = async (loginData) => {
 
     const customer = await Customer.findOne({
         where: {
-            [db.Sequelize.Op.or]: [{ email: emailOrUsername }, { username: emailOrUsername }]
+            [db.Sequelize.Op.or]: [
+                { email: emailOrUsername },
+                { username: emailOrUsername }
+            ]
         }
     });
 
@@ -66,9 +69,8 @@ const loginCustomer = async (loginData) => {
         throw new Error('Email/username hoặc mật khẩu không chính xác.');
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, customer.password);
-
-    if (!isPasswordMatch) {
+    // So sánh mật khẩu trực tiếp (plaintext so với plaintext trong DB)
+    if (password !== customer.password) {
         throw new Error('Email/username hoặc mật khẩu không chính xác.');
     }
 
@@ -81,8 +83,10 @@ const loginCustomer = async (loginData) => {
 
     const token = generateToken(payload, 'customer');
     const { password: _, ...customerInfo } = customer.toJSON();
+
     return { token, customer: customerInfo };
 };
+
 
 
 
