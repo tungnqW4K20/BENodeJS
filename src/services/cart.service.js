@@ -9,7 +9,6 @@ const SizeProduct = db.SizeProduct;
 
 
 const addItemToCart = async (customerId, itemData) => {
-    consele.log("1111111111111111111111111")
     const { product_id, color_product_id, size_product_id, quantity } = itemData;
 
     // 1. Validation (Giữ nguyên)
