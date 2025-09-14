@@ -46,6 +46,7 @@ const getCart = async (req, res) => {
 const updateItem = async (req, res) => {
     try {
         const customerId = req.user.id;
+        console.log("req.user.id", req.user.id)
         const itemId = req.params.itemId; 
         const { quantity } = req.body;
 
@@ -55,6 +56,7 @@ const updateItem = async (req, res) => {
         if (isNaN(parseInt(itemId))) {
             return res.status(400).json({ success: false, message: 'ID sản phẩm không hợp lệ.' });
         }
+        console.log("itemId", itemId)
 
         const updatedItem = await cartService.updateCartItem(customerId, itemId, quantity);
 

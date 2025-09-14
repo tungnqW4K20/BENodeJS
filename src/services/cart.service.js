@@ -107,6 +107,7 @@ const getCustomerCart = async (customerId) => {
 
 
 const updateCartItem = async (customerId, itemId, quantity) => {
+    console.log("customerId-------------------", customerId)
     // Hàm này đã đúng, không cần thay đổi
     if (quantity < 1) {
         throw new Error('Số lượng phải lớn hơn hoặc bằng 1.');
