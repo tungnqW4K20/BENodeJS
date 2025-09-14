@@ -104,8 +104,27 @@ const loginAdmin = async (req, res, next) => {
     }
 };
 
+const refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: "Missing refresh token" })
+    }
+
+    const result = await authService.generateNewTokens(refreshToken)
+
+    return res.status(200).json({
+      success: true,
+      message: 'Refresh token thành công!',
+      data: result // Chứa accessToken + refreshToken mới + user
+    })
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Refresh token failed', error: error.message })
+  }
+}
 module.exports = {
     register,
     login,
-    loginAdmin
+    loginAdmin,
+    refreshToken
 };

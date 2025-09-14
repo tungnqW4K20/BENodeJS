@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { generateToken } = require('../utils/jwt.utils');
+const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt.utils');
 const db = require('../models');
 const Customer = db.Customer;
 const Admin = db.Admin;
@@ -82,13 +82,11 @@ const loginCustomer = async (loginData) => {
     };
 
     const token = generateToken(payload, 'customer');
+    const refreshToken = generateRefreshToken(payload, 'customer' )
     const { password: _, ...customerInfo } = customer.toJSON();
 
-    return { token, customer: customerInfo };
+    return { token, refreshToken, customer: customerInfo };
 };
-
-
-
 
 const loginAdmin = async (loginData) => {
     const { username, password } = loginData;
@@ -124,13 +122,51 @@ const loginAdmin = async (loginData) => {
     };
 
     const token = generateToken(payload, 'admin');
+    const refreshToken = generateRefreshToken(payload, 'admin' )
 
     const { password: _, ...adminInfo } = admin.toJSON();
-    return { token, admin: adminInfo };
+    return { token, refreshToken, admin: adminInfo };
 };
 
+const newRefreshToken = async () => {
+    try {
+        const decoded = verifyRefreshToken(token);
+        const {iat, exp, ...payload} = decoded
+        
+        const newAccessToken = generateToken(payload, payload.role)
+        const newRefreshToken = generateRefreshToken(payload, payload.role)
+
+        return {
+            accessToken : newAccessToken,
+            refreshToken: newRefreshToken,
+            user: payload
+        }
+    } catch (error) {
+        
+    }
+}
+
+const generateNewTokens = async (refreshToken) => {
+  try {
+    const decoded = verifyRefreshToken(refreshToken)
+    const { iat, exp, ...payload } = decoded
+
+    const newAccessToken = generateToken(payload, payload.role)
+    const newRefreshToken = generateRefreshToken(payload, payload.role)
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: payload
+    }
+  } catch (error) {
+    throw error
+  }
+}
 module.exports = {
     registerCustomer,
     loginCustomer,
-    loginAdmin
+    loginAdmin,
+    newRefreshToken,
+    generateNewTokens
 };

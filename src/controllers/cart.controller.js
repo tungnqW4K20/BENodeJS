@@ -78,6 +78,7 @@ const updateItem = async (req, res) => {
 
 const removeItem = async (req, res) => {
     try {
+        console.log("req.user.id", req.user.id)
         const customerId = req.user.id;
         const itemId = req.params.itemId;
         
@@ -94,7 +95,7 @@ const removeItem = async (req, res) => {
     } catch (error) {
         console.error("Remove Cart Item Error:", error.message);
         if (error.message.includes('Không tìm thấy')) {
-            return res.status(404).json({ success: false, message: error.message });
+            return res.status(400).json({ success: false, message: error.message });
         }
         res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ.' });
     }

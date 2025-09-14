@@ -6,5 +6,5 @@ const router = express.Router();
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/login-admin', authController.loginAdmin);
-
+router.post('/refresh', authController.refreshToken);
 module.exports = router;
