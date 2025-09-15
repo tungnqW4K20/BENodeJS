@@ -89,7 +89,7 @@ const getCustomerCart = async (customerId) => {
             {
                 model: Product,
                 as: 'product',
-                attributes: ['id', 'name', 'image_url'] 
+                attributes: ['id', 'name', 'image_url','price'] 
             },
             {
                 model: ColorProduct,
@@ -124,7 +124,6 @@ const updateCartItem = async (customerId, itemId, quantity) => {
         throw new Error('Không tìm thấy sản phẩm trong giỏ hàng.');
     }
     await cartItem.update({ quantity });
-    await new Promise(resolve => setTimeout(resolve, 3000));
     return cartItem;
 };
 
