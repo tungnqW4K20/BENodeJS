@@ -44,7 +44,7 @@ const create = async (req, res, next) => {
         };
 
         const newOrder = await orderService.createOrder(orderData);
-
+        await orderService.removeItemsFromCart(customerId, items);
         res.status(201).json({
             success: true,
             message: 'Tạo đơn hàng thành công!',
@@ -202,6 +202,18 @@ const getByCustomerId = async (req, res, next) => {
     }
 };
 
+// async function removeItemsFromCart(customerId, items) {
+//     for (const item of items) {
+//         await db.CartItem.destroy({
+//             where: {
+//                 customerId,
+//                 productId: item.productId,
+//                 colorProductId: item.colorProductId,
+//                 sizeProductId: item.sizeProductId
+//             }
+//         });
+//     }
+// }
 module.exports = {
     create,
     getMyOrders,

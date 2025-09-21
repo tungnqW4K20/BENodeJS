@@ -362,7 +362,18 @@ const getOrdersByCustomerId = async (customerId) => {
     return plainOrders;
 };
 
-
+async function removeItemsFromCart(customerId, items) {
+    for (const item of items) {
+        await db.CartItem.destroy({
+            where: {
+                customer_id: customerId,
+                product_id: item.productId,
+                color_product_id: item.colorProductId,
+                size_product_id: item.sizeProductId
+            }
+        });
+    }
+}
 
 module.exports = {
     createOrder,
@@ -370,6 +381,7 @@ module.exports = {
     getOrderById,
     getAllOrders,
     updateOrderStatus,         
-    getAvailableOrderStatuses  
+    getAvailableOrderStatuses,
+    removeItemsFromCart
 };
 
