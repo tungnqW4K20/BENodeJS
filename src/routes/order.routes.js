@@ -5,6 +5,10 @@ const orderController = require('../controllers/order.controller');
 const { authenticateToken, authorizeRole } = require('../middlewares/auth.middleware'); 
 
 const router = express.Router();
+router.patch('/:id/status',
+    authenticateToken,
+    orderController.updateOrderStatusCustomer
+);
 
 router.post('/', authenticateToken, orderController.create);
 router.get('/', authenticateToken, orderController.getMyOrders);
@@ -24,5 +28,6 @@ router.get('/admin/statuses',
     authorizeRole("admin"),
     orderController.getOrderStatusesAdmin
 );
+
 
 module.exports = router;

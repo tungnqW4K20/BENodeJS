@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     orderstatus: {
-      type: DataTypes.ENUM('0', '1', '2'), // Maps to SQL ENUM
+      type: DataTypes.ENUM('0', '1', '2', '3'), // Maps to SQL ENUM
       allowNull: false,
       defaultValue: '0', // Default to pending status
       comment: '0: Pending, 1: Processing/Confirmed, 2: Shipped/Completed/Cancelled'

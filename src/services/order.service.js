@@ -16,7 +16,7 @@ const ORDER_STATUS_API_MAP = {
     confirmed: '1', // "confirmed" cũng có thể map tới '1'
     shipped: '2',
     completed: '2', // "completed" cũng có thể map tới '2'
-    cancelled: '2', // "cancelled" cũng có thể map tới '2'
+    cancelled: '3', // "cancelled" cũng có thể map tới '2'
 };
 
 // Mô tả cho từng trạng thái (lấy từ comment của model nếu có)
@@ -277,7 +277,6 @@ const updateOrderStatus = async (orderId, newStatusApiKey) => {
         throw new Error(`Không tìm thấy đơn hàng với ID ${orderId}.`);
     }
 
-    // Chuyển newStatusApiKey (ví dụ: "processing") thành giá trị model (ví dụ: '1')
     const modelStatusValue = ORDER_STATUS_API_MAP[newStatusApiKey.toLowerCase()];
 
     if (!modelStatusValue || !ORDER_STATUS_MODEL_ENUM_VALUES.includes(modelStatusValue)) {
@@ -285,7 +284,12 @@ const updateOrderStatus = async (orderId, newStatusApiKey) => {
         throw new Error(`Trạng thái '${newStatusApiKey}' không hợp lệ. Các trạng thái được chấp nhận: ${validApiKeys}.`);
     }
 
-    
+    if (
+        newStatusApiKey.toLowerCase() === "cancelled" &&
+        order.orderstatus === "2"
+    ) {
+        throw new Error("Không thể chuyển trạng thái từ 'shipped/completed' sang 'cancelled'.");
+    }
 
     order.orderstatus = modelStatusValue;
     await order.save();
