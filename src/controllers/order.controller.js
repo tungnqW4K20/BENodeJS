@@ -248,6 +248,77 @@ const getByCustomerId = async (req, res, next) => {
 //         });
 //     }
 // }
+
+
+/**
+ * @summary Tạo đơn hàng cho khách vãng lai (không cần đăng nhập)
+ * @description API này sẽ nhận thông tin khách hàng và danh sách sản phẩm,
+ * sau đó tự động tạo hoặc cập nhật khách hàng và tạo đơn hàng.
+ */
+const createGuestOrder = async (req, res, next) => {
+    try {
+        // Trích xuất cả thông tin khách hàng và thông tin đơn hàng từ body
+        const { customerInfo, items } = req.body;
+
+        // --- VALIDATION ---
+        if (!customerInfo || !customerInfo.name || !customerInfo.email || !customerInfo.phone || !customerInfo.address) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu trường bắt buộc: customerInfo (phải có name, email, phone, address).'
+            });
+        }
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu trường bắt buộc: items (danh sách sản phẩm không được rỗng).'
+            });
+        }
+        
+        // (Bạn có thể thêm validation chi tiết cho 'items' giống như trong hàm 'create')
+        for (const item of items) {
+             if (!item.productId || !item.colorProductId || !item.sizeProductId || !item.quantity || item.quantity <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Mỗi mặt hàng phải có productId, colorProductId, sizeProductId và quantity > 0.'
+                });
+            }
+        }
+
+        // Gộp dữ liệu lại để gửi xuống service
+        const orderData = {
+            customerInfo,
+            items
+        };
+
+        const newOrder = await orderService.createOrderForGuest(orderData);
+
+        res.status(201).json({
+            success: true,
+            message: 'Tạo đơn hàng thành công!',
+            data: newOrder
+        });
+
+    } catch (error) {
+        console.error("Create Guest Order Controller Error:", error.message);
+        if (error.message.includes('tồn tại') || error.message.includes('không thuộc sản phẩm')) {
+            return res.status(404).json({ success: false, message: error.message });
+        }
+        if (error.message.includes('không đủ số lượng tồn kho')) {
+            return res.status(409).json({ success: false, message: error.message });
+        }
+        if (error.message.includes('là bắt buộc') || error.message.includes('Mỗi mặt hàng phải có')) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+         if (error.message.includes('Email đã được sử dụng')) {
+            return res.status(409).json({ success: false, message: error.message });
+        }
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi tạo đơn hàng.' });
+    }
+};
+
+
+
 module.exports = {
     create,
     getMyOrders,
@@ -256,6 +327,7 @@ module.exports = {
     updateOrderStatusAdmin,  
     getOrderStatusesAdmin,
     getByCustomerId,
-    updateOrderStatusCustomer
+    updateOrderStatusCustomer,
+    createGuestOrder
 };
 

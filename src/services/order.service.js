@@ -43,9 +43,145 @@ ORDER_STATUS_MODEL_ENUM_VALUES.forEach(value => {
 });
 
 
-const createOrder = async (orderData) => {
+// const createOrder = async (orderData) => {
+//     const { customerId, items } = orderData;
+
+//     if (!customerId) {
+//         throw new Error('customerId là bắt buộc.');
+//     }
+//     if (!items || !Array.isArray(items) || items.length === 0) {
+//         throw new Error('Danh sách mặt hàng (items) là bắt buộc và không được rỗng.');
+//     }
+
+//     const transaction = await sequelize.transaction();
+
+//     try {
+//         const customer = await Customer.findByPk(customerId, { transaction });
+//         if (!customer) {
+//             await transaction.rollback();
+//             throw new Error(`Khách hàng với ID ${customerId} không tồn tại.`);
+//         }
+
+//         const newOrder = await Order.create({
+//             customer_id: customerId,
+//             orderstatus: '0', 
+//             orderdate: new Date()
+//         }, { transaction });
+
+//         const orderDetailsToCreate = [];
+//         const inventoryUpdates = [];
+
+//         for (const item of items) {
+//             if (!item.productId || !item.colorProductId || !item.sizeProductId || !item.quantity || item.quantity <= 0) {
+//                 throw new Error('Mỗi mặt hàng phải có productId, colorProductId, sizeProductId và quantity > 0.');
+//             }
+
+//             const product = await Product.findByPk(item.productId, { transaction });
+//             const colorProduct = await ColorProduct.findByPk(item.colorProductId, { transaction });
+//             const sizeProduct = await SizeProduct.findByPk(item.sizeProductId, { transaction });
+
+//             console.log("check size: ", sizeProduct)
+
+//             if (!product) {
+//                 throw new Error(`Sản phẩm với ID ${item.productId} không tồn tại.`);
+//             }
+//             if (!colorProduct) {
+//                 throw new Error(`Biến thể màu với ID ${item.colorProductId} không tồn tại.`);
+//             }
+//             if (!sizeProduct) {
+//                 throw new Error(`Biến thể kích thước với ID ${item.sizeProductId} không tồn tại.`);
+//             }
+
+//             if (colorProduct.product_id !== product.id) {
+//                 throw new Error(`Màu ID ${item.colorProductId} không thuộc sản phẩm ID ${product.id}.`);
+//             }
+//             if (sizeProduct.product_id !== product.id) {
+//                 throw new Error(`Kích thước ID ${item.sizeProductId} không thuộc sản phẩm ID ${product.id}.`);
+//             }
+
+//             const inventoryItem = await Inventory.findOne({
+//                 where: {
+//                     color_product_id: item.colorProductId,
+//                     size_product_id: item.sizeProductId
+//                 },
+//                 transaction
+//             });
+
+//             if (!inventoryItem || inventoryItem.quantity < item.quantity) {
+//                 throw new Error(`Sản phẩm "${product.name}" (Màu: ${colorProduct.name}, Size: ${sizeProduct.name}) không đủ số lượng tồn kho. Yêu cầu: ${item.quantity}, Hiện có: ${inventoryItem ? inventoryItem.quantity : 0}.`);
+//             }
+
+            
+//             const unitPrice = (Number(product.price) || 0) +
+//                               (Number(colorProduct.price) || 0) +
+//                               (Number(sizeProduct.price) || 0);
+
+//             orderDetailsToCreate.push({
+//                 orders_id: newOrder.id,
+//                 products_id: item.productId,
+//                 color_product_id: item.colorProductId,
+//                 size_product_id: item.sizeProductId,
+//                 quantity: item.quantity,
+//                 price: unitPrice, 
+//                 image_url: item.imageUrl || product.image_url || null 
+//             });
+
+//             inventoryUpdates.push({
+//                 inventoryItem: inventoryItem,
+//                 quantityToDecrement: item.quantity
+//             });
+//         }
+
+//         // 4. Tạo các bản ghi OrderDetail
+//         await OrderDetail.bulkCreate(orderDetailsToCreate, { transaction });
+
+//         // 5. Cập nhật số lượng tồn kho (sau khi chắc chắn OrderDetail đã tạo thành công)
+//         for (const update of inventoryUpdates) {
+//             await update.inventoryItem.decrement('quantity', { by: update.quantityToDecrement, transaction });
+//         }
+
+//         // Nếu mọi thứ thành công, commit transaction
+//         await transaction.commit();
+
+//         // Lấy lại đơn hàng với đầy đủ chi tiết để trả về
+//         const createdOrderWithDetails = await Order.findByPk(newOrder.id, {
+//             include: [
+//                 { model: Customer, as: 'customer' },
+//                 {
+//                     model: OrderDetail,
+//                     as: 'orderDetails',
+//                     include: [
+//                         { model: Product, as: 'product' },
+//                         { model: ColorProduct, as: 'colorVariant' },
+//                         { model: SizeProduct, as: 'sizeVariant' }
+//                     ]
+//                 }
+//             ]
+//         });
+
+//         return createdOrderWithDetails;
+
+//     } catch (error) {
+//         if (transaction.finished !== 'commit') {
+//              await transaction.rollback();
+//         }
+//         console.error("Create Order Service Error:", error.message);
+//         throw error; 
+//     }
+// };
+
+/**
+ * @summary Tạo một đơn hàng mới, giảm số lượng tồn kho.
+ * @description Hàm này được thiết kế để có thể hoạt động độc lập hoặc là một phần của một transaction lớn hơn.
+ * @param {object} orderData - Dữ liệu đơn hàng, bao gồm customerId và items.
+ * @param {import('sequelize').Transaction | null} [existingTransaction=null] - Một transaction Sequelize đang hoạt động (tùy chọn).
+ * @returns {Promise<Order>} Đối tượng Order vừa được tạo với đầy đủ chi tiết.
+ * @throws {Error} Ném lỗi nếu có bất kỳ vấn đề nào trong quá trình tạo đơn hàng.
+ */
+const createOrder = async (orderData, existingTransaction = null) => {
     const { customerId, items } = orderData;
 
+    // --- Validation đầu vào ---
     if (!customerId) {
         throw new Error('customerId là bắt buộc.');
     }
@@ -53,45 +189,47 @@ const createOrder = async (orderData) => {
         throw new Error('Danh sách mặt hàng (items) là bắt buộc và không được rỗng.');
     }
 
-    const transaction = await sequelize.transaction();
+    // --- Quản lý Transaction ---
+    // Nếu có transaction được truyền vào, hãy sử dụng nó.
+    // Nếu không, hãy tạo một transaction mới.
+    const transaction = existingTransaction || (await sequelize.transaction());
 
     try {
+        // 1. Kiểm tra sự tồn tại của khách hàng
         const customer = await Customer.findByPk(customerId, { transaction });
         if (!customer) {
-            await transaction.rollback();
+            // Không cần rollback ở đây vì khối catch sẽ xử lý
             throw new Error(`Khách hàng với ID ${customerId} không tồn tại.`);
         }
 
+        // 2. Tạo bản ghi Order chính
         const newOrder = await Order.create({
             customer_id: customerId,
-            orderstatus: '0', 
+            orderstatus: '0', // Trạng thái mặc định là 'Pending'
             orderdate: new Date()
         }, { transaction });
 
         const orderDetailsToCreate = [];
         const inventoryUpdates = [];
 
+        // 3. Lặp qua từng sản phẩm trong đơn hàng để kiểm tra và chuẩn bị dữ liệu
         for (const item of items) {
+            // Validation cho từng item
             if (!item.productId || !item.colorProductId || !item.sizeProductId || !item.quantity || item.quantity <= 0) {
                 throw new Error('Mỗi mặt hàng phải có productId, colorProductId, sizeProductId và quantity > 0.');
             }
 
+            // Truy vấn thông tin sản phẩm, màu, size trong cùng transaction
             const product = await Product.findByPk(item.productId, { transaction });
             const colorProduct = await ColorProduct.findByPk(item.colorProductId, { transaction });
             const sizeProduct = await SizeProduct.findByPk(item.sizeProductId, { transaction });
 
-            console.log("check size: ", sizeProduct)
+            // Kiểm tra sự tồn tại
+            if (!product) throw new Error(`Sản phẩm với ID ${item.productId} không tồn tại.`);
+            if (!colorProduct) throw new Error(`Biến thể màu với ID ${item.colorProductId} không tồn tại.`);
+            if (!sizeProduct) throw new Error(`Biến thể kích thước với ID ${item.sizeProductId} không tồn tại.`);
 
-            if (!product) {
-                throw new Error(`Sản phẩm với ID ${item.productId} không tồn tại.`);
-            }
-            if (!colorProduct) {
-                throw new Error(`Biến thể màu với ID ${item.colorProductId} không tồn tại.`);
-            }
-            if (!sizeProduct) {
-                throw new Error(`Biến thể kích thước với ID ${item.sizeProductId} không tồn tại.`);
-            }
-
+            // Kiểm tra tính hợp lệ của sản phẩm (màu và size phải thuộc đúng sản phẩm)
             if (colorProduct.product_id !== product.id) {
                 throw new Error(`Màu ID ${item.colorProductId} không thuộc sản phẩm ID ${product.id}.`);
             }
@@ -99,11 +237,13 @@ const createOrder = async (orderData) => {
                 throw new Error(`Kích thước ID ${item.sizeProductId} không thuộc sản phẩm ID ${product.id}.`);
             }
 
+            // Kiểm tra số lượng tồn kho
             const inventoryItem = await Inventory.findOne({
                 where: {
                     color_product_id: item.colorProductId,
                     size_product_id: item.sizeProductId
                 },
+                lock: transaction.LOCK.UPDATE, // Khóa bản ghi inventory để tránh race condition
                 transaction
             });
 
@@ -111,64 +251,75 @@ const createOrder = async (orderData) => {
                 throw new Error(`Sản phẩm "${product.name}" (Màu: ${colorProduct.name}, Size: ${sizeProduct.name}) không đủ số lượng tồn kho. Yêu cầu: ${item.quantity}, Hiện có: ${inventoryItem ? inventoryItem.quantity : 0}.`);
             }
 
-            
+            // Tính giá của sản phẩm tại thời điểm đặt hàng
             const unitPrice = (Number(product.price) || 0) +
                               (Number(colorProduct.price) || 0) +
                               (Number(sizeProduct.price) || 0);
 
+            // Chuẩn bị dữ liệu để tạo OrderDetail
             orderDetailsToCreate.push({
                 orders_id: newOrder.id,
                 products_id: item.productId,
                 color_product_id: item.colorProductId,
                 size_product_id: item.sizeProductId,
                 quantity: item.quantity,
-                price: unitPrice, 
-                image_url: item.imageUrl || product.image_url || null 
+                price: unitPrice,
+                image_url: item.imageUrl || product.image_url || null
             });
 
+            // Chuẩn bị dữ liệu để cập nhật Inventory
             inventoryUpdates.push({
                 inventoryItem: inventoryItem,
                 quantityToDecrement: item.quantity
             });
         }
 
-        // 4. Tạo các bản ghi OrderDetail
+        // 4. Tạo đồng loạt các bản ghi OrderDetail (hiệu quả hơn)
         await OrderDetail.bulkCreate(orderDetailsToCreate, { transaction });
 
-        // 5. Cập nhật số lượng tồn kho (sau khi chắc chắn OrderDetail đã tạo thành công)
+        // 5. Cập nhật (giảm) số lượng tồn kho
         for (const update of inventoryUpdates) {
             await update.inventoryItem.decrement('quantity', { by: update.quantityToDecrement, transaction });
         }
 
-        // Nếu mọi thứ thành công, commit transaction
-        await transaction.commit();
+        // --- Quản lý Transaction (Commit) ---
+        // Chỉ commit transaction nếu nó được tạo bởi chính hàm này.
+        // Nếu nó được truyền từ bên ngoài, hàm cha sẽ chịu trách nhiệm commit.
+        if (!existingTransaction) {
+            await transaction.commit();
+        }
 
-        // Lấy lại đơn hàng với đầy đủ chi tiết để trả về
+        // 6. Lấy lại đơn hàng với đầy đủ chi tiết để trả về
         const createdOrderWithDetails = await Order.findByPk(newOrder.id, {
             include: [
-                { model: Customer, as: 'customer' },
+                { model: Customer, as: 'customer', attributes: ['id', 'name', 'email'] },
                 {
                     model: OrderDetail,
                     as: 'orderDetails',
                     include: [
-                        { model: Product, as: 'product' },
-                        { model: ColorProduct, as: 'colorVariant' },
-                        { model: SizeProduct, as: 'sizeVariant' }
+                        { model: Product, as: 'product', attributes: ['id', 'name'] },
+                        { model: ColorProduct, as: 'colorVariant', attributes: ['id', 'name'] },
+                        { model: SizeProduct, as: 'sizeVariant', attributes: ['id', 'name'] }
                     ]
                 }
             ]
+            // Không cần transaction ở đây nữa vì đã commit
         });
 
         return createdOrderWithDetails;
 
     } catch (error) {
-        if (transaction.finished !== 'commit') {
+        // --- Quản lý Transaction (Rollback) ---
+        // Chỉ rollback transaction nếu nó được tạo bởi chính hàm này và chưa hoàn tất.
+        if (!existingTransaction && transaction && !transaction.finished) {
              await transaction.rollback();
         }
         console.error("Create Order Service Error:", error.message);
-        throw error; 
+        // Ném lỗi lên tầng controller để xử lý
+        throw error;
     }
 };
+
 
 
 // const getOrdersByCustomerId = async (customerId, options = {}) => {
@@ -379,6 +530,89 @@ async function removeItemsFromCart(customerId, items) {
     }
 }
 
+
+/**
+ * @summary Tìm khách hàng bằng email hoặc tạo mới nếu chưa có.
+ * @description Hàm này đảm bảo không tạo khách hàng trùng lặp.
+ * @returns {Promise<Customer>} Đối tượng khách hàng đã tồn tại hoặc vừa được tạo.
+ */
+const findOrCreateCustomer = async (customerInfo, transaction) => {
+    const { email, phone, name, address } = customerInfo;
+
+    // Ưu tiên tìm bằng email vì nó là unique
+    let customer = await Customer.findOne({
+        where: { email: email },
+        transaction
+    });
+
+    // Nếu tìm thấy khách hàng, cập nhật lại thông tin mới nhất của họ
+    if (customer) {
+        // Kiểm tra xem khách hàng này đã có tài khoản (username/password) chưa.
+        // Nếu có, không cho phép khách vãng lai đặt hàng bằng email này để tránh xung đột.
+        if (customer.username && customer.password) {
+            throw new Error(`Email đã được sử dụng cho một tài khoản đã đăng ký. Vui lòng đăng nhập để đặt hàng.`);
+        }
+        
+        // Cập nhật thông tin nếu có thay đổi
+        customer.name = name;
+        customer.phone = phone;
+        customer.address = address;
+        await customer.save({ transaction });
+        
+    } else {
+        // Nếu không tìm thấy, tạo khách hàng mới
+        customer = await Customer.create({
+            name,
+            email,
+            phone,
+            address,
+            // username và password để null vì đây là khách vãng lai
+        }, { transaction });
+    }
+
+    return customer;
+};
+
+
+const createOrderForGuest = async (orderData) => {
+    const { customerInfo, items } = orderData;
+
+    if (!customerInfo) {
+        throw new Error('customerInfo là bắt buộc.');
+    }
+     if (!items || !Array.isArray(items) || items.length === 0) {
+        throw new Error('Danh sách mặt hàng (items) là bắt buộc và không được rỗng.');
+    }
+
+
+    const transaction = await sequelize.transaction();
+    try {
+        // Bước 1: Tìm hoặc tạo khách hàng mới
+        const customer = await findOrCreateCustomer(customerInfo, transaction);
+
+        // Bước 2: Gọi lại hàm createOrder gốc với customerId đã có
+        // Chúng ta tái sử dụng logic đã có để không lặp lại code
+        const newOrder = await createOrder({
+            customerId: customer.id,
+            items: items
+        }, transaction); // Truyền transaction vào hàm createOrder
+
+        // Nếu mọi thứ thành công, commit transaction
+        // Lưu ý: `createOrder` sẽ tự quản lý transaction của nó, nên cần điều chỉnh
+        // Ở đây, chúng ta sẽ copy logic của createOrder vào đây để quản lý chung một transaction
+
+        await transaction.commit(); // Commit transaction ở hàm cha
+
+        return newOrder;
+
+    } catch (error) {
+        await transaction.rollback();
+        console.error("Create Order For Guest Service Error:", error.message);
+        throw error;
+    }
+};
+
+
 module.exports = {
     createOrder,
     getOrdersByCustomerId,
@@ -386,6 +620,7 @@ module.exports = {
     getAllOrders,
     updateOrderStatus,         
     getAvailableOrderStatuses,
-    removeItemsFromCart
+    removeItemsFromCart,
+    createOrderForGuest
 };
 
