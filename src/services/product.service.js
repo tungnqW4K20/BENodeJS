@@ -87,6 +87,30 @@ const getAllProducts = async (queryParams = {}) => {
     return await Product.findAndCountAll(options);
 };
 
+// search product
+const searchProduct = async (queryParams = {}) => {
+    let { limit, offset, search, isFeatured } = queryParams;
+
+    const options = {
+        include: [{
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name'] 
+        }],
+        where: {},
+        order: [['createdAt', 'DESC']], 
+    };
+
+    if (limit) options.limit = parseInt(limit);
+    if (offset) options.offset = parseInt(offset);
+
+
+    if (search) {
+        options.where.name = { [Op.like]: `%${search}%` };
+    }
+
+    return await Product.findAndCountAll(options);
+};
 
 const getProductById = async (productId) => {
     const product = await Product.findByPk(productId, {
@@ -230,5 +254,6 @@ module.exports = {
     updateProduct,
     deleteProduct,
     getProductVariantsById,
-    getFullProductDetailsById
+    getFullProductDetailsById,
+    searchProduct
 };

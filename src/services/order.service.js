@@ -444,8 +444,6 @@ const updateOrderStatus = async (orderId, newStatusApiKey) => {
 
     order.orderstatus = modelStatusValue;
     await order.save();
-
-    
     return getOrderById(orderId);
 };
 

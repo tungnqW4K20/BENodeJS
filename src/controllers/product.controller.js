@@ -37,6 +37,7 @@ const create = async (req, res, next) => {
 };
 
 
+
 const getAll = async (req, res, next) => {
     try {
         const { limit = 10, page = 1, categoryId, search } = req.query;
@@ -62,6 +63,32 @@ const getAll = async (req, res, next) => {
     }
 };
 
+
+// Search product
+const searchProduct = async (req, res, next) => {
+    try {
+        const { limit = 10, page = 1, search } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        const queryParams = { limit: parseInt(limit), offset, search };
+
+        const { rows: products, count } = await productService.searchProduct(queryParams);
+        
+        res.status(200).json({
+            success: true,
+            data: products,
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / parseInt(limit)),
+                currentPage: parseInt(page),
+                pageSize: parseInt(limit)
+            }
+        });
+    } catch (error) {
+        console.error("Get All Products Error:", error.message);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy danh sách sản phẩm.' });
+    }
+};
 
 const getById = async (req, res, next) => {
     try {
@@ -269,5 +296,6 @@ module.exports = {
     getPaginateFeature,
     getVariants,
     getDetailsById,
-    getByCategory
+    getByCategory,
+    searchProduct
 };

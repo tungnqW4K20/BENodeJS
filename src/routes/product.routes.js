@@ -9,6 +9,7 @@ const router = express.Router();
 router.post('/', authenticateToken, authorizeRole("admin"), productController.create);
 
 router.get('/', productController.getAll);
+router.get('/search', productController.searchProduct);
 
 router.get('/get-paginate-featured', productController.getPaginateFeature);
 
