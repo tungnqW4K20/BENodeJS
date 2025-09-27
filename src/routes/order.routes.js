@@ -17,6 +17,7 @@ router.post('/guest', orderController.createGuestOrder);
 
 router.get('/', authenticateToken, orderController.getMyOrders);
 router.get('/customer', authenticateToken, orderController.getByCustomerId);
+router.get('/my-purchased-products', authenticateToken, orderController.getMyPurchasedProducts);
 router.get('/:id', authenticateToken, orderController.getMyOrderById);
 router.get('/admin/all', authenticateToken, authorizeRole("admin"), orderController.getAllOrdersAdmin);
 

@@ -318,6 +318,21 @@ const createGuestOrder = async (req, res, next) => {
 };
 
 
+const getMyPurchasedProducts = async (req, res, next) => {
+    try {
+        const customerId = req.user.id;
+        const purchasedProducts = await orderService.getPurchasedProductsByCustomerId(customerId);
+        
+        res.status(200).json({
+            success: true,
+            data: purchasedProducts
+        });
+    } catch (error) {
+        console.error("Get My Purchased Products Controller Error:", error.message);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy danh sách sản phẩm đã mua.' });
+    }
+};
+
 
 module.exports = {
     create,
@@ -328,6 +343,7 @@ module.exports = {
     getOrderStatusesAdmin,
     getByCustomerId,
     updateOrderStatusCustomer,
-    createGuestOrder
+    createGuestOrder,
+    getMyPurchasedProducts
 };
 

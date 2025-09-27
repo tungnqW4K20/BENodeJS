@@ -611,6 +611,90 @@ const createOrderForGuest = async (orderData) => {
 };
 
 
+const getPurchasedProductsByCustomerId = async (customerId) => {
+    try {
+        const customer = await db.Customer.findByPk(customerId);
+        if (!customer) {
+            throw new Error(`Không tìm thấy khách hàng với ID ${customerId}.`);
+        }
+
+        const purchasedItems = await db.OrderDetail.findAll({
+            attributes: [
+                // Chỉ lấy các trường cần thiết và có thể gộp nhóm
+                [sequelize.fn('DISTINCT', sequelize.col('product.id')), 'productId'],
+                'product.name',
+                'colorVariant.name',
+                'colorVariant.image_urls',
+                'sizeVariant.name',
+                'image_url',
+            ],
+            include: [
+                {
+                    model: db.Order,
+                    as: 'order',
+                    where: { customer_id: customerId },
+                    attributes: [] // Không cần lấy thông tin từ bảng Order
+                },
+                {
+                    model: db.Product,
+                    as: 'product',
+                    attributes: ['name']
+                },
+                {
+                    model: db.ColorProduct,
+                    as: 'colorVariant',
+                    attributes: ['name', 'image_urls']
+                },
+                {
+                    model: db.SizeProduct,
+                    as: 'sizeVariant',
+                    attributes: ['name']
+                }
+            ],
+            // Gộp các sản phẩm giống hệt nhau (cùng product, color, size)
+            group: [
+                'product.id', 
+                'product.name', 
+                'colorVariant.name', 
+                'colorVariant.image_urls', 
+                'sizeVariant.name', 
+                'image_url'
+            ],
+            raw: true // Trả về kết quả dưới dạng object JSON thuần túy
+        });
+        console.log("purchasedItems", purchasedItems)
+        // Chuyển đổi tên các trường để thân thiện hơn với frontend
+       const result = purchasedItems.map(item => {
+    let colorImageUrls = [];
+    try {
+        if (item['colorVariant.image_urls']) {
+            // Nếu DB trả về string thì parse JSON
+            colorImageUrls = typeof item['colorVariant.image_urls'] === 'string'
+                ? JSON.parse(item['colorVariant.image_urls'])
+                : item['colorVariant.image_urls'];
+        }
+    } catch (e) {
+        console.error("Parse image_urls error:", e.message);
+    }
+
+    return {
+        productId: item.productId,
+        productName: item['product.name'],
+        colorName: item['colorVariant.name'],
+        sizeName: item['sizeVariant.name'],
+        orderImageUrl: item.image_url, // ảnh trong OrderDetail
+        colorImageUrl: colorImageUrls[0] || null // ảnh đại diện
+    };
+});
+
+        return result;
+
+    } catch (error) {
+        console.error("Get Purchased Products Service Error:", error.message);
+        throw new Error('Lỗi khi lấy danh sách sản phẩm đã mua.');
+    }
+};
+
 module.exports = {
     createOrder,
     getOrdersByCustomerId,
@@ -619,6 +703,7 @@ module.exports = {
     updateOrderStatus,         
     getAvailableOrderStatuses,
     removeItemsFromCart,
-    createOrderForGuest
+    createOrderForGuest,
+    getPurchasedProductsByCustomerId
 };
 
