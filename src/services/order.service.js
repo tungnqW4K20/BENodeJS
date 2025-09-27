@@ -627,7 +627,7 @@ const getPurchasedProductsByCustomerId = async (customerId) => {
                 'colorVariant.image_urls',
                 'sizeVariant.name',
                 'image_url',
-
+                'OrderDetail.price',  
             ],
             include: [
                 {

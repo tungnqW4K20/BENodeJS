@@ -84,7 +84,7 @@ const createCustomerComment = async (commentData, customerId) => {
         content,
         product_id,
         customer_id: customerId,
-        parent_id: null // Đây là bình luận gốc
+        parent_id: null, // Đây là bình luận gốc,
     });
 
     return newComment;

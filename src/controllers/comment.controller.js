@@ -1,6 +1,7 @@
 'use strict';
 
 const commentService = require('../services/comment.service');
+const uploadService = require('../services/upload.service');
 
 /**
  * Lấy tất cả bình luận của một sản phẩm.
@@ -33,8 +34,14 @@ const createComment = async (req, res) => {
     try {
         // ID của khách hàng được lấy từ token sau khi xác thực
         const customerId = req.user.id; 
-        const { content, product_id } = req.body;
-        
+        const { content, product_id, images } = req.body;
+        let imageUrls = [];
+        // if (req.files && req.files.length > 0) {
+        //     for (const file of req.files) {
+        //         const imageUrl = await uploadService.handleProductImageUpload(file, "reviews");
+        //         imageUrls.push(imageUrl);
+        //     }
+        // }
         const newComment = await commentService.createCustomerComment({ content, product_id }, customerId);
         
         res.status(201).json({

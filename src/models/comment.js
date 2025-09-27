@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(500), // Or TEXT
       allowNull: false
     },
+    
     product_id: {
       type: DataTypes.INTEGER,
       allowNull: true, // Allow comment not tied to a product? Or set false?

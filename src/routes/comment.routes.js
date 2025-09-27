@@ -3,6 +3,9 @@ const express = require('express');
 const commentController = require('../controllers/comment.controller');
 // Giả sử bạn có middleware này để xác thực và phân quyền
 const { authenticateToken, authorizeRole } = require('../middlewares/auth.middleware'); 
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -15,6 +18,7 @@ router.get('/product/:productId', commentController.getByProduct);
 router.post('/', 
     authenticateToken, 
     authorizeRole('customer'), 
+    upload.array('images', 5), // nhận tối đa 5 ảnh
     commentController.createComment
 );
 
