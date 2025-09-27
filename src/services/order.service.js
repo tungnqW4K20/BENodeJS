@@ -627,12 +627,13 @@ const getPurchasedProductsByCustomerId = async (customerId) => {
                 'colorVariant.image_urls',
                 'sizeVariant.name',
                 'image_url',
+
             ],
             include: [
                 {
                     model: db.Order,
                     as: 'order',
-                    where: { customer_id: customerId },
+                    where: { customer_id: customerId, orderstatus: '2' },
                     attributes: [] // Không cần lấy thông tin từ bảng Order
                 },
                 {
@@ -653,39 +654,42 @@ const getPurchasedProductsByCustomerId = async (customerId) => {
             ],
             // Gộp các sản phẩm giống hệt nhau (cùng product, color, size)
             group: [
-                'product.id', 
-                'product.name', 
-                'colorVariant.name', 
-                'colorVariant.image_urls', 
-                'sizeVariant.name', 
-                'image_url'
+                'product.id',
+                'product.name',
+                'colorVariant.name',
+                'colorVariant.image_urls',
+                'sizeVariant.name',
+                'image_url',
+                'OrderDetail.price',  
+
             ],
             raw: true // Trả về kết quả dưới dạng object JSON thuần túy
         });
         console.log("purchasedItems", purchasedItems)
         // Chuyển đổi tên các trường để thân thiện hơn với frontend
-       const result = purchasedItems.map(item => {
-    let colorImageUrls = [];
-    try {
-        if (item['colorVariant.image_urls']) {
-            // Nếu DB trả về string thì parse JSON
-            colorImageUrls = typeof item['colorVariant.image_urls'] === 'string'
-                ? JSON.parse(item['colorVariant.image_urls'])
-                : item['colorVariant.image_urls'];
-        }
-    } catch (e) {
-        console.error("Parse image_urls error:", e.message);
-    }
+        const result = purchasedItems.map(item => {
+            let colorImageUrls = [];
+            try {
+                if (item['colorVariant.image_urls']) {
+                    // Nếu DB trả về string thì parse JSON
+                    colorImageUrls = typeof item['colorVariant.image_urls'] === 'string'
+                        ? JSON.parse(item['colorVariant.image_urls'])
+                        : item['colorVariant.image_urls'];
+                }
+            } catch (e) {
+                console.error("Parse image_urls error:", e.message);
+            }
 
-    return {
-        productId: item.productId,
-        productName: item['product.name'],
-        colorName: item['colorVariant.name'],
-        sizeName: item['sizeVariant.name'],
-        orderImageUrl: item.image_url, // ảnh trong OrderDetail
-        colorImageUrl: colorImageUrls[0] || null // ảnh đại diện
-    };
-});
+            return {
+                productId: item.productId,
+                productName: item['product.name'],
+                colorName: item['colorVariant.name'],
+                sizeName: item['sizeVariant.name'],
+                orderImageUrl: item.image_url, 
+                colorImageUrl: colorImageUrls[0] || null,
+                price: item.price,
+            };
+        });
 
         return result;
 
