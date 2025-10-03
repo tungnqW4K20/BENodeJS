@@ -53,7 +53,30 @@ module.exports = (sequelize, DataTypes) => {
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE' // If parent comment deleted, delete replies
-    }
+    },
+    image_urls: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Array of up to 7 image URLs for this color variant.',
+      validate: {
+        isValidImageArray(value) {
+          if (value === null) {
+            return;
+          }
+          if (!Array.isArray(value)) {
+            throw new Error('image_urls must be an array.');
+          }
+          if (value.length > 7) {
+            throw new Error('A maximum of 7 image URLs are allowed.');
+          }
+          for (const item of value) {
+            if (typeof item !== 'string' && item !== null) {
+              throw new Error('Each item in image_urls must be a string URL or null.');
+            }
+          }
+        }
+      },
+    },
   }, {
     sequelize,
     modelName: 'Comment',

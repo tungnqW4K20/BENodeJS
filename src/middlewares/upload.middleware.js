@@ -79,7 +79,7 @@ const upload = multer({
   storage: storage,
   fileFilter: imageFileFilter,
   limits: {
-    fileSize: 1024 * 1024 * 5, // tối đa 5MB
+    fileSize: 1024 * 1024 *5 , // tối đa5MB
   },
 });
 

@@ -66,7 +66,7 @@ const getAllComments = async () => {
 
 
 const createCustomerComment = async (commentData, customerId) => {
-    const { content, product_id } = commentData;
+    const { content, product_id, image_urls  } = commentData;
     if (!content || !product_id) {
         throw new Error('Nội dung và ID sản phẩm là bắt buộc.');
     }
@@ -84,7 +84,8 @@ const createCustomerComment = async (commentData, customerId) => {
         content,
         product_id,
         customer_id: customerId,
-        parent_id: null, // Đây là bình luận gốc,
+        parent_id: null, 
+        image_urls: image_urls || []
     });
 
     return newComment;

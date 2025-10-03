@@ -14,3 +14,4 @@ router.put('/:id', authenticateToken, authorizeRole("admin"), categoryController
 router.delete('/:id', authenticateToken, authorizeRole("admin"), categoryController.deleteCategory);
 
 module.exports = router;
+

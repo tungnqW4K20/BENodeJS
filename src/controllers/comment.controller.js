@@ -34,7 +34,7 @@ const createComment = async (req, res) => {
     try {
         // ID của khách hàng được lấy từ token sau khi xác thực
         const customerId = req.user.id; 
-        const { content, product_id, images } = req.body;
+        const { content, product_id, image_urls } = req.body;
         let imageUrls = [];
         // if (req.files && req.files.length > 0) {
         //     for (const file of req.files) {
@@ -42,7 +42,7 @@ const createComment = async (req, res) => {
         //         imageUrls.push(imageUrl);
         //     }
         // }
-        const newComment = await commentService.createCustomerComment({ content, product_id }, customerId);
+        const newComment = await commentService.createCustomerComment({ content, product_id, image_urls }, customerId);
         
         res.status(201).json({
             success: true,

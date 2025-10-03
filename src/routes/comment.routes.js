@@ -18,7 +18,6 @@ router.get('/product/:productId', commentController.getByProduct);
 router.post('/', 
     authenticateToken, 
     authorizeRole('customer'), 
-    upload.array('images', 5), // nhận tối đa 5 ảnh
     commentController.createComment
 );
 
