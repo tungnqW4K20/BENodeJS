@@ -15,6 +15,7 @@ const getCommentsByProduct = async (productId) => {
             product_id: productId,
             parent_id: null 
         },
+        // attributes: ['id', 'name'],
         include: [
             {
                 model: Customer,
