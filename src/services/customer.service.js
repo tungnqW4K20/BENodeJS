@@ -22,18 +22,24 @@ const customerToJSON = (customer) => {
 const createCustomer = async (customerData) => {
     const { name, email, address, username, password, phone } = customerData;
 
+    // 1️⃣ Kiểm tra dữ liệu bắt buộc
     if (!name || !email || !address || !phone) {
         throw new Error("Tên, email, địa chỉ và số điện thoại là bắt buộc.");
     }
 
+    // 2️⃣ Kiểm tra trùng lặp email
     const existingEmail = await Customer.findOne({ where: { email } });
     if (existingEmail) {
         throw new Error(`Email "${email}" đã tồn tại.`);
     }
+
+    // 3️⃣ Kiểm tra trùng lặp số điện thoại
     const existingPhone = await Customer.findOne({ where: { phone } });
     if (existingPhone) {
         throw new Error(`Số điện thoại "${phone}" đã tồn tại.`);
     }
+
+    // 4️⃣ Kiểm tra trùng lặp username (nếu có)
     if (username) {
         const existingUsername = await Customer.findOne({ where: { username } });
         if (existingUsername) {
@@ -41,20 +47,42 @@ const createCustomer = async (customerData) => {
         }
     }
 
+    // 5️⃣ Tạo đối tượng mới — KHÔNG mã hoá mật khẩu
     const customerToCreate = {
         name,
         email,
         address,
         username,
         phone,
-        password, 
+        password, // lưu thẳng mật khẩu gốc
     };
 
+    // 6️⃣ Tạo bản ghi
     const newCustomer = await Customer.create(customerToCreate);
 
+    // 7️⃣ Trả dữ liệu về (tuỳ hàm customerToJSON bạn dùng)
     return customerToJSON(newCustomer);
 };
 
+
+
+/**
+ * Get all customers (non-deleted).
+ * @returns {Promise<object[]>} - List of customers (without passwords).
+ */
+const getAllCustomers = async () => {
+    const customers = await Customer.findAll();
+    return customers.map(customerToJSON);
+};
+
+
+const getCustomerById = async (customerId) => {
+    const customer = await Customer.findByPk(customerId);
+    if (!customer) {
+        throw new Error(`Không tìm thấy khách hàng với ID ${customerId}.`);
+    }
+    return customerToJSON(customer);
+};
 
 
 const updateCustomer = async (customerId, updateData) => {
