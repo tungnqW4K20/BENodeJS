@@ -30,6 +30,14 @@ const paymentController = {
       const hmac = crypto.createHmac('sha512', secretKey);
       const calculatedChecksum = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
+      // 🧩 Thêm debug log tại đây:
+      console.log('==================== VNPAY RETURN DEBUG ====================');
+      console.log('👉 Received Params:', vnp_Params);
+      console.log('👉 signData (for verification):', signData);
+      console.log('👉 Received Hash:', secureHash);
+      console.log('👉 Calculated Hash:', calculatedChecksum);
+      console.log('👉 Match?:', secureHash === calculatedChecksum);
+      console.log('============================================================');
       // 4️⃣ So sánh chữ ký
       if (secureHash !== calculatedChecksum) {
         console.error('⚠️ Sai chữ ký!');
@@ -114,13 +122,21 @@ const paymentController = {
       const hmac = crypto.createHmac('sha512', secretKey);
       const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
       sorted['vnp_SecureHash'] = signed;
-
+   // 🧩 Thêm debug log ở đây:
+      console.log('==================== VNPAY DEBUG ====================');
+      console.log('👉 Raw Params:', vnp_Params);
+      console.log('👉 Sorted Params:', sorted);
+      console.log('👉 signData:', signData);
+      console.log('👉 Generated Hash:', signed);
+      console.log('=====================================================');
       const finalUrl = `${vnpUrl}?${new URLSearchParams(sorted).toString()}`;
 
       res.json({
         code: '00',
         message: 'Success',
         data: finalUrl,
+         debug_signData: signData,  // 👈 thêm dòng này
+  debug_hash: signed   
       });
     } catch (err) {
       console.error('Create Payment Error:', err);

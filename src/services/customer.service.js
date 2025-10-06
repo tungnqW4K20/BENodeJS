@@ -23,19 +23,17 @@ const createCustomer = async (customerData) => {
     const { name, email, address, username, password, phone } = customerData;
 
     if (!name || !email || !address || !phone) {
-        throw new Error('Tên, email, địa chỉ và số điện thoại là bắt buộc.');
+        throw new Error("Tên, email, địa chỉ và số điện thoại là bắt buộc.");
     }
 
     const existingEmail = await Customer.findOne({ where: { email } });
     if (existingEmail) {
         throw new Error(`Email "${email}" đã tồn tại.`);
     }
-
     const existingPhone = await Customer.findOne({ where: { phone } });
     if (existingPhone) {
         throw new Error(`Số điện thoại "${phone}" đã tồn tại.`);
     }
-
     if (username) {
         const existingUsername = await Customer.findOne({ where: { username } });
         if (existingUsername) {
@@ -43,34 +41,20 @@ const createCustomer = async (customerData) => {
         }
     }
 
-    const customerToCreate = { name, email, address, username, phone };
-
-    if (password) {
-        customerToCreate.password = await bcrypt.hash(password, SALT_ROUNDS);
-    }
+    const customerToCreate = {
+        name,
+        email,
+        address,
+        username,
+        phone,
+        password, 
+    };
 
     const newCustomer = await Customer.create(customerToCreate);
+
     return customerToJSON(newCustomer);
 };
 
-
-/**
- * Get all customers (non-deleted).
- * @returns {Promise<object[]>} - List of customers (without passwords).
- */
-const getAllCustomers = async () => {
-    const customers = await Customer.findAll();
-    return customers.map(customerToJSON);
-};
-
-
-const getCustomerById = async (customerId) => {
-    const customer = await Customer.findByPk(customerId);
-    if (!customer) {
-        throw new Error(`Không tìm thấy khách hàng với ID ${customerId}.`);
-    }
-    return customerToJSON(customer);
-};
 
 
 const updateCustomer = async (customerId, updateData) => {
