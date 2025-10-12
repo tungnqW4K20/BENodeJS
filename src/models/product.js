@@ -12,6 +12,8 @@ module.exports = (sequelize, DataTypes) => {
       Product.hasMany(models.ImportInvoiceDetail, { foreignKey: 'products_id', as: 'importDetails' }); // Use original FK name
       Product.hasMany(models.Comment, { foreignKey: 'product_id', as: 'comments' });
       Product.hasMany(models.Rating, { foreignKey: 'products_id', as: 'ratings' }); // Use original FK name
+      Product.hasMany(models.ViewHistory, { foreignKey: 'product_id', as: 'viewHistories' });
+
     }
   }
   Product.init({

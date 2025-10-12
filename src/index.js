@@ -20,6 +20,7 @@ const commentRoutes = require('./routes/comment.routes');
 const cartRoutes = require('./routes/cart.routes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const paymentRoutes = require('./routes/payment.routes');
+const viewHistoryRoutes = require('./routes/viewHistory.route');
 
 
 
@@ -37,8 +38,8 @@ db.sequelize.authenticate()
   .then(() => {
     console.log('Kết nối MySQL thành công!');
     //return db.sequelize.sync({ alter: true }); // Dùng alter hoặc không sync ở đây nếu dùng migrations
-     return db.sequelize.sync(); // Đồng bộ để tạo bảng nếu chưa có
-    //return db.sequelize.sync({ alter: true }); // thay đổi cấu trúc bảng
+     //return db.sequelize.sync(); // Đồng bộ để tạo bảng nếu chưa có
+    return db.sequelize.sync({ alter: true }); // thay đổi cấu trúc bảng
   })
   .then(() => {
     console.log('Đồng bộ bảng thành công!');
@@ -58,6 +59,7 @@ db.sequelize.authenticate()
     app.use('/api/carts', cartRoutes); 
     app.use('/api/inventory', inventoryRoutes); 
     app.use('/api/payment', paymentRoutes); 
+    app.use('/api/view-history', viewHistoryRoutes); 
 
     
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)

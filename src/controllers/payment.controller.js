@@ -61,7 +61,7 @@ const paymentController = {
 
         // Nếu chưa hoàn tất mới cập nhật
         if (order.orderstatus !== '2') {
-          order.orderstatus = '2'; // 2 = Completed
+          order.orderstatus = '2'; 
           await order.save();
           console.log(`✅ Order ${orderId} updated to status=2`);
         }

@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('0', '1', '2', '3'), // Maps to SQL ENUM
       allowNull: false,
       defaultValue: '0', // Default to pending status
-      comment: '0: Pending, 1: Processing/Confirmed, 2: Shipped/Completed/Cancelled'
+      comment: '0: Đang chờ xử lý, 1: Đang giao, 2: Đã giao, 3: Đã hủy '
     },
     orderdate: {
       type: DataTypes.DATE, // datetime -> DATE

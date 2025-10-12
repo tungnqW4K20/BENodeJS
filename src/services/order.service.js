@@ -36,7 +36,8 @@ ORDER_STATUS_MODEL_ENUM_VALUES.forEach(value => {
         switch (value) {
             case '0': ORDER_STATUS_DESCRIPTIONS[value] = 'Đang chờ xử lý'; break;
             case '1': ORDER_STATUS_DESCRIPTIONS[value] = 'Đang xử lý/Đã xác nhận'; break;
-            case '2': ORDER_STATUS_DESCRIPTIONS[value] = 'Đã giao/Hoàn thành/Đã hủy'; break;
+            case '2': ORDER_STATUS_DESCRIPTIONS[value] = 'Đã giao/Hoàn thành'; break;
+            case '3': ORDER_STATUS_DESCRIPTIONS[value] = 'Đã hủy'; break;
             default: ORDER_STATUS_DESCRIPTIONS[value] = `Trạng thái ${value}`;
         }
     }
@@ -451,6 +452,8 @@ const updateOrderStatus = async (orderId, newStatusApiKey) => {
 const getAvailableOrderStatuses = () => {
     // Đảm bảo mỗi modelValue chỉ xuất hiện một lần
     return ORDER_STATUS_MODEL_ENUM_VALUES.map(modelValue => {
+        console.log("modelValue", modelValue)
+        console.log("ORDER_STATUS_DESCRIPTIONS[modelValue]", ORDER_STATUS_DESCRIPTIONS[modelValue])
         // Tìm một apiKey tương ứng (có thể có nhiều apiKey map tới cùng 1 modelValue, chọn 1 cái)
         const apiKey = Object.keys(ORDER_STATUS_API_MAP).find(key => ORDER_STATUS_API_MAP[key] === modelValue) || `status_val_${modelValue}`; // Fallback apiKey
         return {
