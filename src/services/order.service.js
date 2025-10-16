@@ -293,7 +293,7 @@ const createOrder = async (orderData, existingTransaction = null) => {
         // 6. Lấy lại đơn hàng với đầy đủ chi tiết để trả về
         const createdOrderWithDetails = await Order.findByPk(newOrder.id, {
             include: [
-                { model: Customer, as: 'customer', attributes: ['id', 'name', 'email'] },
+                { model: Customer, as: 'customer', attributes: ['id', 'name', 'email', 'phone','address'] },
                 {
                     model: OrderDetail,
                     as: 'orderDetails',
