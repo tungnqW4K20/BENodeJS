@@ -145,9 +145,24 @@ const removeCartItem = async (customerId, itemId) => {
     await cartItem.destroy(); 
 };
 
+const countCartItems = async (customerId) => {
+    // Đếm tổng số lượng sản phẩm (cộng quantity của từng item)
+    const result = await CartItem.findAll({
+        where: { customer_id: customerId },
+        attributes: ['quantity']
+    });
+
+    // Nếu user chưa có sản phẩm nào
+    if (!result || result.length === 0) return 0;
+
+    // Tính tổng quantity
+    const total = result.reduce((sum, item) => sum + item.quantity, 0);
+    return total;
+};
 module.exports = {
     addItemToCart,
     getCustomerCart,
     updateCartItem,
-    removeCartItem
+    removeCartItem,
+    countCartItems
 };

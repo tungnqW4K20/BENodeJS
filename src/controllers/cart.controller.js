@@ -103,9 +103,28 @@ const removeItem = async (req, res) => {
     }
 };
 
+const getCartCount = async (req, res) => {
+    try {
+        const customerId = req.user.id;
+        const totalCount = await cartService.countCartItems(customerId);
+
+        res.status(200).json({
+            success: true,
+            totalQuantity: totalCount
+        });
+    } catch (error) {
+        console.error("Get Cart Count Error:", error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Lỗi máy chủ nội bộ khi lấy số lượng giỏ hàng.' 
+        });
+    }
+};
+
 module.exports = {
     addItem,
     getCart,
     updateItem,
-    removeItem
+    removeItem,
+    getCartCount
 };
