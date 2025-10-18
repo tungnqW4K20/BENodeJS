@@ -3,7 +3,7 @@ const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../
 const db = require('../models');
 const Customer = db.Customer;
 const Admin = db.Admin;
-
+const CartItem = db.CartItem;
 const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
 
@@ -84,8 +84,11 @@ const loginCustomer = async (loginData) => {
     const token = generateToken(payload, 'customer');
     const refreshToken = generateRefreshToken(payload, 'customer' )
     const { password: _, ...customerInfo } = customer.toJSON();
+    const cartCount = await CartItem.sum('quantity', {
+        where: { customer_id: customer.id }
+    });
 
-    return { token, refreshToken, customer: customerInfo };
+    return { token, refreshToken, customer: customerInfo,  cartCount: cartCount || 0 };
 };
 
 const loginAdmin = async (loginData) => {
